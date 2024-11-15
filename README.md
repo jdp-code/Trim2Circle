@@ -1,6 +1,6 @@
 # Trim2Circle
 
-Image Processor is a web application that allows users to upload images, resize and crop them to a circle, and generate a PDF or ZIP file with the processed images.
+Trim2Circle is a web application that allows users to upload images, resize and crop them to a circle, and generate a PDF or ZIP file with the processed images.
 
 ## Features
 
