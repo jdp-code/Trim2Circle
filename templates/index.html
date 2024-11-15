@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Album Cover Cropper</title>
+    <link href="https://fonts.googleapis.com/css?family=Segoe+UI:400,600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #201F1E;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0078d4, #5c2d91);
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #FFFFFF;
+            margin: 20px;
+        }
+        h1 {
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 32px;
+            color: #323130;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #323130;
+        }
+        input[type="file"],
+        input[type="number"],
+        select,
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 1px solid #8A8886;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+            font-size: 15px;
+            color: #201F1E;
+        }
+        button {
+            background-color: #0A5C9E;
+            border: none;
+            color: #FFFFFF;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #004578;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Album Cover Cropper</h1>
+        <form action="/process" method="post" enctype="multipart/form-data">
+            <label for="input_files">Eingabedateien:</label>
+            <input type="file" id="input_files" name="input_files" multiple required>
+            <label for="diameter">Durchmesser (mm):</label>
+            <input type="number" id="diameter" name="diameter" required>
+            <label for="output_format">Ausgabeformat:</label>
+            <select id="output_format" name="output_format" required>
+                <option value="zip">ZIP</option>
+                <option value="pdf">PDF</option>
+            </select>
+            <button type="submit">Bilder verarbeiten</button>
+        </form>
+    </div>
+</body>
+</html>
