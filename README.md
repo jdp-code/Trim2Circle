@@ -32,7 +32,7 @@ Image Processor is a web application that allows users to upload images, resize 
     docker compose up -d
     ```
 
-3. Open your web browser and go to `http://localhost:5050`.
+3. Open your web browser and go to `http://localhost:5000`.
 
 ## Usage
 
