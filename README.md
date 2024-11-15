@@ -10,6 +10,10 @@ https://github.com/toniebox-reverse-engineering/teddycloud
 
 https://gt-blog.de/toniebox-hacking-how-to-get-started/
 
+https://forum.revvox.de/t/teddycloud-esp32-newbie-documentation-deprecated/112
+
+https://www.youtube.com/watch?v=JpMRyshgy9o
+
 ## Features
 
 - Upload multiple images (PNG, JPG, JPEG)
