@@ -1,82 +1,107 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Album Cover Cropper</title>
-    <link href="https://fonts.googleapis.com/css?family=Segoe+UI:400,600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trim2Circle</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
             margin: 0;
-            padding: 0;
-            color: #201F1E;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0078d4, #5c2d91);
+            height: 100vh;
+            color: white;
         }
         .container {
-            max-width: 800px;
-            width: 100%;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            background-color: #FFFFFF;
-            margin: 20px;
-        }
-        h1 {
-            font-weight: 600;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             text-align: center;
-            margin-bottom: 32px;
-            color: #323130;
+            width: 400px;
+        }
+        .logo {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .description {
+            font-size: 1em;
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
-            color: #323130;
+            margin: 10px 0 5px;
         }
-        input[type="file"],
-        input[type="number"],
-        select,
-        button {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 20px;
-            border: 1px solid #8A8886;
-            border-radius: 8px;
-            background-color: #FFFFFF;
-            font-size: 15px;
-            color: #201F1E;
-        }
-        button {
-            background-color: #0A5C9E;
+        input, select, button {
+            width: calc(100% - 20px); /* Adjust width to account for padding */
+            padding: 10px;
+            margin-bottom: 10px;
             border: none;
-            color: #FFFFFF;
-            font-size: 1.2em;
+            border-radius: 5px;
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+        button {
+            background-color: #2575fc;
+            color: white;
             cursor: pointer;
-            transition: background-color 0.2s ease;
         }
         button:hover {
-            background-color: #004578;
+            background-color: #1a5bb8;
         }
     </style>
+    <script>
+        function toggleFields() {
+            var outputFormat = document.getElementById('output_format').value;
+            var diameterField = document.getElementById('diameter_field');
+            var paperSizeField = document.getElementById('paper_size_field');
+            if (outputFormat === 'pdf') {
+                diameterField.style.display = 'block';
+                paperSizeField.style.display = 'block';
+            } else {
+                diameterField.style.display = 'none';
+                paperSizeField.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleFields(); // Ensure fields are correctly displayed on load
+        });
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Album Cover Cropper</h1>
+        <div class="logo">Trim2Circle</div>
+        <div class="description">Upload your images and choose the desired output format. You can resize and crop images to a circle, and generate a PDF or ZIP file.</div>
         <form action="/process" method="post" enctype="multipart/form-data">
-            <label for="input_files">Eingabedateien:</label>
-            <input type="file" id="input_files" name="input_files" multiple required>
-            <label for="diameter">Durchmesser (mm):</label>
-            <input type="number" id="diameter" name="diameter" required>
-            <label for="output_format">Ausgabeformat:</label>
-            <select id="output_format" name="output_format" required>
+            <label for="output_format">Output Format:</label>
+            <select id="output_format" name="output_format" onchange="toggleFields()">
+                <option value="pdf" selected>PDF</option>
                 <option value="zip">ZIP</option>
-                <option value="pdf">PDF</option>
             </select>
-            <button type="submit">Bilder verarbeiten</button>
+            <div id="diameter_field">
+                <label for="diameter">Diameter (mm):</label>
+                <input type="number" id="diameter" name="diameter">
+            </div>
+            <div id="paper_size_field">
+                <label for="paper_size">Paper Size:</label>
+                <select id="paper_size" name="paper_size">
+                    <option value="A4">A4</option>
+                    <option value="A3">A3</option>
+                    <option value="A5">A5</option>
+                    <option value="LETTER">Letter</option>
+                    <option value="LEGAL">Legal</option>
+                    <option value="B4">B4</option>
+                    <option value="B5">B5</option>
+                    <option value="TABLOID">Tabloid</option>
+                </select>
+            </div>
+            <label for="input_files">Select Images:</label>
+            <input type="file" id="input_files" name="input_files" multiple>
+            <button type="submit">Process</button>
         </form>
     </div>
 </body>
