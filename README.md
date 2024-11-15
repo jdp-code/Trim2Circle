@@ -2,8 +2,12 @@
 
 Trim2Circle is a web application that allows users to upload images, resize and crop them to a circle, and generate a PDF or ZIP file with the processed images.
 
-Usecase: Custome figurines and tags for Teddy Cloud
+## Usecase
+
+Custome figurines and tags for Teddy Cloud
+
 https://github.com/toniebox-reverse-engineering/teddycloud
+
 https://gt-blog.de/toniebox-hacking-how-to-get-started/
 
 ## Features
