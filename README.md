@@ -41,6 +41,10 @@ Image Processor is a web application that allows users to upload images, resize 
 3. Upload the images you want to process.
 4. Click the "Process" button to generate the output file.
 
+## Example Output PDF
+![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
+
+
 ## Dependencies
 
 - Flask
