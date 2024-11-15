@@ -42,6 +42,8 @@ Image Processor is a web application that allows users to upload images, resize 
 4. Click the "Process" button to generate the output file.
 
 ## Example Output PDF
+![image](https://github.com/user-attachments/assets/76447906-c8c0-443b-a392-6238ead95970)
+
 ![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
 
 
