@@ -1,11 +1,12 @@
-version: '3.8'
-
 services:
   web:
-    build: .
+    image: jdpcode/trim2circle
+    #Only needed if building the image yourself
+    #build: .
     ports:
       - "5000:5000"
-    volumes:
-      - .:/app
-    environment:
-      FLASK_ENV: production
+    #Only needed if building the image yourself
+    #volumes:
+    #  - .:/app
+    #environment:
+    #  FLASK_ENV: production
