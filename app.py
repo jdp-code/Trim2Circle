@@ -6,6 +6,11 @@ import zipfile
 from reportlab.lib.pagesizes import A4, LETTER, LEGAL, A3, A5, B4, B5, TABLOID
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+from reportlab.lib.units import cm
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -72,6 +77,10 @@ def mm_to_pixels(mm, dpi):
 def mm_to_points(mm):
     return mm * 2.83465
 
+
+# Paper sizes in points
+canon_selphy = (10*cm, 14.8*cm)
+
 def get_paper_size(size_name):
     sizes = {
         'A3': A3,
@@ -81,9 +90,11 @@ def get_paper_size(size_name):
         'LEGAL': LEGAL,
         'B4': B4,
         'B5': B5,
-        'TABLOID': TABLOID
+        'TABLOID': TABLOID,
+        'CANON_SELPHY': canon_selphy
     }
     return sizes.get(size_name, A4)
+
 
 def create_pdf(images, diameter_mm, buffer, paper_size):
     page_size = get_paper_size(paper_size)
