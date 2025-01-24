@@ -1,12 +1,12 @@
 services:
   web:
-    #image: jdpcode/trim2circle
+    image: jdpcode/trim2circle:latest
     #Only needed if building the image yourself
-    build: .
+    #build: .
     ports:
       - "5000:5000"
     #Only needed if building the image yourself
-    volumes:
-     - .:/app
-    environment:
-      FLASK_ENV: production
+    #volumes:
+    #- .:/app
+    #environment:
+    #  FLASK_ENV: production
