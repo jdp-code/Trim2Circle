@@ -1,3 +1,4 @@
-Flask
-Pillow
+flask
+pillow
 reportlab
+pdf2image

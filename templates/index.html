@@ -53,33 +53,41 @@
             background-color: #1a5bb8;
         }
     </style>
-    <script>
-        function toggleFields() {
-            var outputFormat = document.getElementById('output_format').value;
-            var diameterField = document.getElementById('diameter_field');
-            var paperSizeField = document.getElementById('paper_size_field');
-            if (outputFormat === 'pdf') {
-                diameterField.style.display = 'block';
-                paperSizeField.style.display = 'block';
-            } else {
-                diameterField.style.display = 'none';
-                paperSizeField.style.display = 'none';
+        <script>
+            function toggleFields() {
+                var outputFormat = document.getElementById('output_format').value;
+                var diameterField = document.getElementById('diameter_field');
+                var paperSizeField = document.getElementById('paper_size_field');
+                var marginField = document.getElementById('margin_field');
+                var spacingField = document.getElementById('spacing_field');
+    
+                if (outputFormat === 'pdf' || outputFormat === 'png' || outputFormat === 'zip') {
+                    diameterField.style.display = 'block';
+                    paperSizeField.style.display = 'block';
+                    marginField.style.display = 'block';
+                    spacingField.style.display = 'block';
+                } else {
+                    diameterField.style.display = 'none';
+                    paperSizeField.style.display = 'none';
+                    marginField.style.display = 'none';
+                    spacingField.style.display = 'none';
+                }
             }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            toggleFields(); // Ensure fields are correctly displayed on load
-        });
-    </script>
+    
+            document.addEventListener('DOMContentLoaded', function() {
+                toggleFields(); // Ensure fields are correctly displayed on load
+            });
+        </script>
 </head>
 <body>
     <div class="container">
         <div class="logo">Trim2Circle</div>
-        <div class="description">Upload your images and choose the desired output format. You can resize and crop images to a circle, and generate a PDF or ZIP file.</div>
+        <div class="description">Upload your images and choose the desired output format. You can resize and crop images to a circle, and generate a PDF, PNG, or ZIP file.</div>
         <form action="/process" method="post" enctype="multipart/form-data">
             <label for="output_format">Output Format:</label>
             <select id="output_format" name="output_format" onchange="toggleFields()">
                 <option value="pdf" selected>PDF</option>
+                <option value="png">PNG</option>
                 <option value="zip">ZIP</option>
             </select>
             <div id="diameter_field">
@@ -100,9 +108,17 @@
                     <option value="CANON_SELPHY">Canon Selphy (100mm x 148mm)</option>
                 </select>
             </div>
-            <label for="input_files">Select Images:</label>
+            <div id="margin_field">
+                <label for="margin">Margin (mm):</label>
+                <input type="number" id="margin" name="margin" value="10">
+            </div>
+            <div id="spacing_field">
+                <label for="spacing">Spacing (mm):</label>
+                <input type="number" id="spacing" name="spacing" value="5">
+            </div>
+            <label for="input_files">Upload Images:</label>
             <input type="file" id="input_files" name="input_files" multiple>
-            <button type="submit">Process</button>
+            <button type="submit">Process Images</button>
         </form>
     </div>
 </body>
