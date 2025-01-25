@@ -1,18 +1,25 @@
-# Verwenden Sie ein offizielles Python-Image als Basis
+# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Setzen Sie das Arbeitsverzeichnis im Container
+# Set the working directory in the container
 WORKDIR /app
 
-# Kopieren Sie die requirements.txt und installieren Sie die Abhängigkeiten
-COPY requirements.txt .
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Kopieren Sie den Rest des Anwendungscodes
-COPY . .
-
-# Exponieren Sie den Port, auf dem die Anwendung läuft
+# Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Starten Sie die Flask-Anwendung
-CMD ["python", "app.py"]
+# Define environment variable
+ENV FLASK_APP=app.py
+
+# Run the application
+CMD ["flask", "run", "--host=0.0.0.0"]
