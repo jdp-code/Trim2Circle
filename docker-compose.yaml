@@ -1,6 +1,6 @@
 services:
   web:
-    image: jdpcode/trim2circle
+    image: sorz2122/trim2circle
     #Only needed if building the image yourself
     #build: .
     ports:
