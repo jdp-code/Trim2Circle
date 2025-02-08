@@ -36,8 +36,7 @@ def process_images():
     input_files = request.files.getlist('input_files')
 
     images = []
-    total_files = len(input_files)
-    for i, file in enumerate(input_files):
+    for file in input_files:
         if file.filename.endswith(('.png', '.jpg', '.jpeg')):
             image = Image.open(file.stream).convert("RGBA")
             if diameter_mm:
@@ -53,24 +52,6 @@ def process_images():
         pdf_buffer.seek(0)
         return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=True, download_name='processed_images.pdf')
     elif output_format == 'png':
-        pdf_buffer = io.BytesIO()
-        create_pdf(images, diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)
-        pdf_buffer.seek(0)
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w') as zf:
-            try:
-                pdf_images = convert_pdf_to_images(pdf_buffer, 'png')
-                for i, img in enumerate(pdf_images):
-                    img_buffer = io.BytesIO()
-                    img.save(img_buffer, format='PNG')
-                    img_buffer.seek(0)
-                    zf.writestr(f'page_{i+1}.png', img_buffer.read())
-            except Exception as e:
-                logging.error(f"Error converting PDF to images: {e}")
-                return "Error converting PDF to images", 500
-        zip_buffer.seek(0)
-        return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='processed_images.zip')
-    elif output_format == 'zip':
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zf:
             for i, image in enumerate(images):
@@ -127,16 +108,10 @@ def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
-        img_reader = ImageReader(img_buffer)
-        c.drawImage(img_reader, x, y, width=diameter_points, height=diameter_points)
+        c.drawImage(ImageReader(img_buffer), x, y, width=diameter_points, height=diameter_points, mask='auto')
         x += diameter_points + spacing_points
 
     c.save()
-
-def convert_pdf_to_images(pdf_buffer, image_format):
-    pdf_buffer.seek(0)
-    images = convert_from_bytes(pdf_buffer.read(), fmt=image_format)
-    return images
 
 def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
@@ -144,30 +119,24 @@ def resize_image(image, diameter_mm):
 
 def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=2):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
+    
+    # Erstelle eine Maske für den Kreis
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
-    
+    draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+
+    # Schneide das Bild auf die Kreisform zu
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
+    result.paste(image, (0, 0), mask=mask)
+
+    # Füge einen schwarzen Rand hinzu (falls aktiviert)
     if add_border:
         border_pixels = mm_to_pixels(border_width_mm, 300)
-        draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-        inner_diameter = diameter_pixels - 2 * border_pixels
-        draw.ellipse(
-            (border_pixels, border_pixels, 
-             diameter_pixels - border_pixels, diameter_pixels - border_pixels),
-            fill=0
-        )
-    else:
-        draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
-    result.paste(image, (0, 0), mask=mask)
-    
-    if add_border:
-        border_layer = Image.new('RGBA', result.size, (0, 0, 0, 0))
+        border_layer = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
         border_draw = ImageDraw.Draw(border_layer)
         border_draw.ellipse(
             (0, 0, diameter_pixels, diameter_pixels),
-            outline=(0, 0, 0, 255),
+            outline=(0, 0, 0, 255),  # Schwarzer Rand
             width=border_pixels
         )
         result = Image.alpha_composite(result, border_layer)
