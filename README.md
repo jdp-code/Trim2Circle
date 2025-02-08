@@ -59,9 +59,10 @@ https://www.youtube.com/watch?v=JpMRyshgy9o
 4. Click the "Process" button to generate the output file.
 
 ## Example Output PDF
-![image](https://github.com/user-attachments/assets/76447906-c8c0-443b-a392-6238ead95970)
-
+![Screenshot 2025-02-08 191108](https://github.com/user-attachments/assets/4e18e048-2bac-4e49-a0d6-5cf4a058efb0)
 ![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
+![Screenshot 2025-02-08 191141](https://github.com/user-attachments/assets/0bfa68f2-2ab1-438e-af13-399ecb74d7de)
+
 
 
 ## Dependencies
