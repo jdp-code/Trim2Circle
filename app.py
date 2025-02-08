@@ -32,6 +32,9 @@ def process_images():
     output_format = request.form['output_format'].lower()
     paper_size = request.form['paper_size']
     input_files = request.files.getlist('input_files')
+    add_border = 'add_border' in request.form
+    border_width_mm = int(request.form['border_width']) if add_border else 0
+
 
     images = []
     total_files = len(input_files)
@@ -40,7 +43,7 @@ def process_images():
             image = Image.open(file.stream).convert("RGBA")
             if diameter_mm:
                 image = resize_image(image, diameter_mm)
-                output_image = crop_to_circle(image, diameter_mm)
+                output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
             else:
                 output_image = image
             images.append(output_image)
