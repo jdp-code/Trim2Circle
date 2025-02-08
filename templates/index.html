@@ -94,6 +94,12 @@
                 <label for="diameter">Diameter (mm):</label>
                 <input type="number" id="diameter" name="diameter">
             </div>
+            <div id="border_field">
+                <label for="add_border">Schwarzer Rand:</label>
+                <input type="checkbox" id="add_border" name="add_border" onchange="toggleBorderWidth()">
+                <label for="border_width">Randstärke (mm):</label>
+                <input type="number" id="border_width" name="border_width" value="2" min="0" disabled>
+            </div>
             <div id="paper_size_field">
                 <label for="paper_size">Paper Size:</label>
                 <select id="paper_size" name="paper_size">
