@@ -30,7 +30,7 @@ def process_images():
     margin_mm = int(request.form['margin']) if 'margin' in request.form else 10
     spacing_mm = int(request.form['spacing']) if 'spacing' in request.form else 5
     add_border = 'add_border' in request.form
-    border_width_mm = int(request.form['border_width']) if add_border else 0
+    border_width_mm = float(request.form['border_width']) if add_border else 0.0
     output_format = request.form['output_format'].lower()
     paper_size = request.form['paper_size']
     input_files = request.files.getlist('input_files')
@@ -117,9 +117,20 @@ def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=2):
+def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0.1):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     
+    # Stelle sicher, dass das Bild quadratisch ist
+    width, height = image.size
+    if width != height:
+        size = min(width, height)
+        left = (width - size) / 2
+        top = (height - size) / 2
+        right = (width + size) / 2
+        bottom = (height + size) / 2
+        image = image.crop((left, top, right, bottom))
+        image = image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
+
     # Erstelle eine Maske für den Kreis
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
