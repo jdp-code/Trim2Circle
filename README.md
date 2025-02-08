@@ -1,10 +1,10 @@
-# Trim2Circle
+Trim2Circle
 
 Trim2Circle is a web application that allows users to upload images, resize and crop them to a circle, and generate a PDF or ZIP file with the processed images.
 
-## Usecase
+Usecase
 
-Custome figurines and tags for Teddy Cloud
+Custom figurines and tags for Teddy Cloud
 
 https://github.com/toniebox-reverse-engineering/teddycloud
 
@@ -14,57 +14,70 @@ https://forum.revvox.de/t/teddycloud-esp32-newbie-documentation-deprecated/112
 
 https://www.youtube.com/watch?v=JpMRyshgy9o
 
-## Features
+Features
 
-- Upload multiple images (PNG, JPG, JPEG)
-- Resize images to a specified diameter
-- Crop images to a circle
-- Generate a PDF with the processed images
-- Generate a ZIP file with the processed images
+Upload multiple images (PNG, JPG, JPEG)
 
-## Installation
+Resize images to a specified diameter
 
-### Prerequisites
+Crop images to a circle
 
-- Docker
-- Docker Compose
+Generate a PDF with the processed images
 
-### Steps
+Generate a ZIP file with the processed images
 
-1. Clone the repository:
+New in this fork: Option to add a black border for cutting guidance
 
-    ```sh
-    git clone https://github.com/jdp-code/Trim2Circle.git
-    cd Trim2Circle
-    ```
+New in this fork: Ability to specify the border width
 
-2. Build and run the application using Docker Compose:
+Installation
 
-    ```sh
-    docker compose up -d
-    ```
+Prerequisites
 
-3. Open your web browser and go to `http://localhost:5000`.
+Docker
 
-## Usage
+Docker Compose
 
-1. Select the output format (PDF or ZIP).
-2. If PDF is selected, specify the diameter (in mm) and the paper size.
-3. Upload the images you want to process.
-4. Click the "Process" button to generate the output file.
+Steps
 
-## Example Output PDF
-![image](https://github.com/user-attachments/assets/76447906-c8c0-443b-a392-6238ead95970)
+Clone the repository:
 
-![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
+git clone https://github.com/jdp-code/Trim2Circle.git
+cd Trim2Circle
+
+Build and run the application using Docker Compose:
+
+docker compose up -d
+
+Open your web browser and go to http://localhost:5041.
+
+Usage
+
+Select the output format (PDF or ZIP).
+
+If PDF is selected, specify the diameter (in mm) and the paper size.
+
+Upload the images you want to process.
+
+(Optional) Enable the black border option and specify the border width.
+
+Click the "Process" button to generate the output file.
+
+Example Output PDF
 
 
-## Dependencies
 
-- Flask
-- Pillow
-- reportlab
 
-## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Dependencies
+
+Flask
+
+Pillow
+
+reportlab
+
+License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
