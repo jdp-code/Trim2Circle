@@ -141,15 +141,45 @@ def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm):
+def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=2):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+    
+    # Rand hinzufügen (falls aktiviert)
+    if add_border:
+        border_pixels = mm_to_pixels(border_width_mm, 300)
+        # Äußerer Kreis (schwarzer Rand)
+        draw.ellipse(
+            (0, 0, diameter_pixels, diameter_pixels),
+            fill=255
+        )
+        # Innerer Kreis (Bildausschnitt)
+        inner_diameter = diameter_pixels - 2 * border_pixels
+        draw.ellipse(
+            (border_pixels, border_pixels, 
+             diameter_pixels - border_pixels, diameter_pixels - border_pixels),
+            fill=0
+        )
+    else:
+        # Standardkreis ohne Rand
+        draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+
+    # Bild auf Kreis zuschneiden
     result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
     result.paste(image, (0, 0), mask=mask)
-    # Ensure the background is transparent
-    result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
+    
+    # Schwarzen Rand zeichnen (falls aktiviert)
+    if add_border:
+        border_layer = Image.new('RGBA', result.size, (0, 0, 0, 0))
+        border_draw = ImageDraw.Draw(border_layer)
+        border_draw.ellipse(
+            (0, 0, diameter_pixels, diameter_pixels),
+            outline=(0, 0, 0, 255),
+            width=border_pixels
+        )
+        result = Image.alpha_composite(result, border_layer)
+
     return result
 
 if __name__ == '__main__':
