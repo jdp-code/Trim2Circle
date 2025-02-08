@@ -29,12 +29,11 @@ def process_images():
     diameter_mm = int(request.form['diameter']) if 'diameter' in request.form else None
     margin_mm = int(request.form['margin']) if 'margin' in request.form else 10
     spacing_mm = int(request.form['spacing']) if 'spacing' in request.form else 5
+    add_border = 'add_border' in request.form
+    border_width_mm = int(request.form['border_width']) if add_border else 0
     output_format = request.form['output_format'].lower()
     paper_size = request.form['paper_size']
     input_files = request.files.getlist('input_files')
-    add_border = 'add_border' in request.form
-    border_width_mm = int(request.form['border_width']) if add_border else 0
-
 
     images = []
     total_files = len(input_files)
@@ -125,7 +124,6 @@ def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
                 c.showPage()
                 y = page_height - margin_points - diameter_points
 
-        # Save the image to a buffer to preserve transparency
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
@@ -149,15 +147,9 @@ def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=2):
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     
-    # Rand hinzufügen (falls aktiviert)
     if add_border:
         border_pixels = mm_to_pixels(border_width_mm, 300)
-        # Äußerer Kreis (schwarzer Rand)
-        draw.ellipse(
-            (0, 0, diameter_pixels, diameter_pixels),
-            fill=255
-        )
-        # Innerer Kreis (Bildausschnitt)
+        draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
         inner_diameter = diameter_pixels - 2 * border_pixels
         draw.ellipse(
             (border_pixels, border_pixels, 
@@ -165,14 +157,11 @@ def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=2):
             fill=0
         )
     else:
-        # Standardkreis ohne Rand
         draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
 
-    # Bild auf Kreis zuschneiden
     result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
     result.paste(image, (0, 0), mask=mask)
     
-    # Schwarzen Rand zeichnen (falls aktiviert)
     if add_border:
         border_layer = Image.new('RGBA', result.size, (0, 0, 0, 0))
         border_draw = ImageDraw.Draw(border_layer)
