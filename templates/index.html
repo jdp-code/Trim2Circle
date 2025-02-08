@@ -53,31 +53,39 @@
             background-color: #1a5bb8;
         }
     </style>
-        <script>
-            function toggleFields() {
-                var outputFormat = document.getElementById('output_format').value;
-                var diameterField = document.getElementById('diameter_field');
-                var paperSizeField = document.getElementById('paper_size_field');
-                var marginField = document.getElementById('margin_field');
-                var spacingField = document.getElementById('spacing_field');
-    
-                if (outputFormat === 'pdf' || outputFormat === 'png' || outputFormat === 'zip') {
-                    diameterField.style.display = 'block';
-                    paperSizeField.style.display = 'block';
-                    marginField.style.display = 'block';
-                    spacingField.style.display = 'block';
-                } else {
-                    diameterField.style.display = 'none';
-                    paperSizeField.style.display = 'none';
-                    marginField.style.display = 'none';
-                    spacingField.style.display = 'none';
-                }
-            }
-    
-            document.addEventListener('DOMContentLoaded', function() {
-                toggleFields(); // Ensure fields are correctly displayed on load
-            });
-        </script>
+<script>
+    function toggleFields() {
+        var outputFormat = document.getElementById('output_format').value;
+        var diameterField = document.getElementById('diameter_field');
+        var paperSizeField = document.getElementById('paper_size_field');
+        var marginField = document.getElementById('margin_field');
+        var spacingField = document.getElementById('spacing_field');
+
+        if (outputFormat === 'pdf' || outputFormat === 'png' || outputFormat === 'zip') {
+            diameterField.style.display = 'block';
+            paperSizeField.style.display = 'block';
+            marginField.style.display = 'block';
+            spacingField.style.display = 'block';
+        } else {
+            diameterField.style.display = 'none';
+            paperSizeField.style.display = 'none';
+            marginField.style.display = 'none';
+            spacingField.style.display = 'none';
+        }
+    }
+
+    // Füge diesen neuen Code hier ein:
+    function toggleBorderWidth() {
+        var borderCheckbox = document.getElementById('add_border');
+        var borderWidthField = document.getElementById('border_width');
+        borderWidthField.disabled = !borderCheckbox.checked;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleFields(); // Ensure fields are correctly displayed on load
+        toggleBorderWidth(); // Ensure border width field is correctly enabled/disabled on load
+    });
+</script>
 </head>
 <body>
     <div class="container">
