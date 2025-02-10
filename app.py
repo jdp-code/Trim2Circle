@@ -29,19 +29,21 @@ def process_images():
     diameter_mm = int(request.form['diameter']) if 'diameter' in request.form else None
     margin_mm = int(request.form['margin']) if 'margin' in request.form else 10
     spacing_mm = int(request.form['spacing']) if 'spacing' in request.form else 5
-    add_border = 'add_border' in request.form
-    border_width_mm = float(request.form['border_width']) if add_border else 0.0
     output_format = request.form['output_format'].lower()
     paper_size = request.form['paper_size']
     input_files = request.files.getlist('input_files')
+    add_border = 'add_border' in request.form
+    border_width_mm = float(request.form.get('border_width', 0))  # Randstärke in mm
+    output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
 
     images = []
-    for file in input_files:
+    total_files = len(input_files)
+    for i, file in enumerate(input_files):
         if file.filename.endswith(('.png', '.jpg', '.jpeg')):
             image = Image.open(file.stream).convert("RGBA")
             if diameter_mm:
                 image = resize_image(image, diameter_mm)
-                output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
+                output_image = crop_to_circle(image, diameter_mm)
             else:
                 output_image = image
             images.append(output_image)
@@ -52,6 +54,24 @@ def process_images():
         pdf_buffer.seek(0)
         return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=True, download_name='processed_images.pdf')
     elif output_format == 'png':
+        pdf_buffer = io.BytesIO()
+        create_pdf(images, diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)
+        pdf_buffer.seek(0)
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w') as zf:
+            try:
+                pdf_images = convert_pdf_to_images(pdf_buffer, 'png')
+                for i, img in enumerate(pdf_images):
+                    img_buffer = io.BytesIO()
+                    img.save(img_buffer, format='PNG')
+                    img_buffer.seek(0)
+                    zf.writestr(f'page_{i+1}.png', img_buffer.read())
+            except Exception as e:
+                logging.error(f"Error converting PDF to images: {e}")
+                return "Error converting PDF to images", 500
+        zip_buffer.seek(0)
+        return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='processed_images.zip')
+    elif output_format == 'zip':
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zf:
             for i, image in enumerate(images):
@@ -105,54 +125,44 @@ def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
                 c.showPage()
                 y = page_height - margin_points - diameter_points
 
+        # Save the image to a buffer to preserve transparency
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
-        c.drawImage(ImageReader(img_buffer), x, y, width=diameter_points, height=diameter_points, mask='auto')
+        img_reader = ImageReader(img_buffer)
+        c.drawImage(img_reader, x, y, width=diameter_points, height=diameter_points)
         x += diameter_points + spacing_points
 
     c.save()
+
+def convert_pdf_to_images(pdf_buffer, image_format):
+    pdf_buffer.seek(0)
+    images = convert_from_bytes(pdf_buffer.read(), fmt=image_format)
+    return images
 
 def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0.1):
+def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
-    
-    # Stelle sicher, dass das Bild quadratisch ist
-    width, height = image.size
-    if width != height:
-        size = min(width, height)
-        left = (width - size) / 2
-        top = (height - size) / 2
-        right = (width + size) / 2
-        bottom = (height + size) / 2
-        image = image.crop((left, top, right, bottom))
-        image = image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
-
-    # Erstelle eine Maske für den Kreis
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-
-    # Schneide das Bild auf die Kreisform zu
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
     result.paste(image, (0, 0), mask=mask)
-
-    # Füge einen schwarzen Rand hinzu (falls aktiviert)
-    if add_border:
+    result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
+    if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm, 300)
-        border_layer = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
-        border_draw = ImageDraw.Draw(border_layer)
-        border_draw.ellipse(
+        draw = ImageDraw.Draw(result)
+        draw.ellipse(
             (0, 0, diameter_pixels, diameter_pixels),
             outline=(0, 0, 0, 255),  # Schwarzer Rand
             width=border_pixels
         )
-        result = Image.alpha_composite(result, border_layer)
 
     return result
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
