@@ -141,7 +141,7 @@ def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
+def crop_to_circle(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
@@ -150,28 +150,7 @@ def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     result.paste(image, (0, 0), mask=mask)
     # Ensure the background is transparent
     result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
-
-
-    if add_border and border_width_mm > 0:
-        # Erstelle den Rahmen ebenfalls in hoher Auflösung
-        border_pixels = mm_to_pixels(border_width_mm, 300)
-        hr_border = Image.new('L', (hr_size, hr_size), 0)
-        hr_draw_border = ImageDraw.Draw(hr_border)
-        inset = int((border_pixels * scale) / 2)
-        hr_draw_border.ellipse((inset, inset, hr_size - inset, hr_size - inset), outline=255, width=int(border_pixels * scale))
-        border_mask = hr_border.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
-        
-        # Erstelle ein Bild für den Rand (schwarz) und setze den Alpha-Kanal auf die Rahmenmaske
-        border_image = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
-        border_image.putalpha(border_mask)
-        
-        # Kombiniere den Rand mit dem Ergebnisbild – auch hier nur einmalig
-        result = Image.alpha_composite(result, border_image)
-    
     return result
-
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
