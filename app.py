@@ -42,21 +42,19 @@ def draw_curved_text(draw, text, diameter, font_size=20, bold_words=[], y_offset
     radius = diameter / 2
     angle_step = 360 / len(text)
     current_angle = 270  # Beginne oben
-    
-    for i, char in enumerate(text):
-        # Prüfe ob das Wort fett sein soll
-        current_word = text.split()[i] if i < len(text.split()) else ""
-        use_bold = any(word.strip('*') == current_word for word in bold_words)
-        
+
+    for char in text:
         radians = math.radians(current_angle)
         x = radius + (radius - 10) * math.cos(radians)
         y = radius + (radius - 10) * math.sin(radians) + y_offset
-        
+
+        # Prüfe ob das Zeichen fett sein soll
+        use_bold = char in bold_words
         draw.text((x, y), char, 
                  font=bold_font if use_bold else font,
                  fill=(0, 0, 0),
                  anchor="mm")
-        
+
         current_angle -= angle_step
 
 @app.route('/')
@@ -66,17 +64,21 @@ def index():
 @app.route('/process', methods=['POST'])
 def process_images():
     # Formularparameter
-    params = {
-        'diameter': int(request.form.get('diameter', 0)),
-        'margin': int(request.form.get('margin', 10)),
-        'spacing': int(request.form.get('spacing', 5)),
-        'font_size': int(request.form.get('font_size', 20)),
-        'output_format': request.form.get('output_format', 'pdf').lower(),
-        'paper_size': request.form.get('paper_size', 'A4'),
-        'add_border': 'add_border' in request.form,
-        'border_width': float(request.form.get('border_width', 0.5)),
-        'bold_words': request.form.get('bold_words', '').split(',')
-    }
+    try:
+        params = {
+            'diameter': int(request.form.get('diameter', 0)),
+            'margin': int(request.form.get('margin', 10)),
+            'spacing': int(request.form.get('spacing', 5)),
+            'font_size': int(request.form.get('font_size', 20)),
+            'output_format': request.form.get('output_format', 'pdf').lower(),
+            'paper_size': request.form.get('paper_size', 'A4'),
+            'add_border': 'add_border' in request.form,
+            'border_width': float(request.form.get('border_width', 0.5)),
+            'bold_words': request.form.get('bold_words', '').split(',')
+        }
+    except ValueError as e:
+        logging.error(f"Fehler bei der Verarbeitung der Parameter: {str(e)}")
+        return render_template('error.html', message="Ungültige Eingabeparameter")
 
     # Dateien verarbeiten
     images = []
@@ -85,11 +87,11 @@ def process_images():
             try:
                 img = Image.open(file.stream).convert("RGBA")
                 title = request.form.get(f'title_{i}', '')
-                
+
                 if params['diameter'] > 0:
                     img = img.resize((mm_to_pixels(params['diameter']),) * 2, Image.LANCZOS)
                     img = crop_to_circle(img, params, title)
-                
+
                 images.append(img)
             except Exception as e:
                 logging.error(f"Fehler bei {file.filename}: {str(e)}")
@@ -122,13 +124,13 @@ def process_images():
 def crop_to_circle(image, params, title):
     diameter = image.width
     draw = ImageDraw.Draw(image)
-    
+
     # Kreis zeichnen
     mask = Image.new('L', (diameter, diameter), 0)
     ImageDraw.Draw(mask).ellipse((0, 0, diameter, diameter), fill=255)
     result = Image.new('RGBA', (diameter, diameter), (0, 0, 0, 0))
     result.paste(image, (0, 0), mask=mask)
-    
+
     # Text hinzufügen
     if title:
         draw_curved_text(ImageDraw.Draw(result), 
@@ -137,7 +139,7 @@ def crop_to_circle(image, params, title):
                         params['font_size'],
                         params['bold_words'],
                         y_offset=-20)
-    
+
     # Rand hinzufügen
     if params['add_border']:
         border = mm_to_pixels(params['border_width'])
