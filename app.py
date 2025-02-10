@@ -147,29 +147,34 @@ def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     
     # Erstelle die kreisförmige Maske
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
-    draw_mask = ImageDraw.Draw(mask)
-    draw_mask.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
     
     # Erstelle das kreisförmige Bild mit transparentem Hintergrund
-    circular_image = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
-    circular_image.paste(image, (0, 0), mask=mask)
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (255, 255, 255, 0))
+    result.paste(image, (0, 0), mask=mask)
+    # Sicherstellen, dass der Hintergrund transparent ist
+    result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
     
     if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm, 300)
-        # Erstelle einen Layer für den Rahmen
-        border_layer = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
+        # Erstelle einen Layer für den Rahmen mit transparentem Hintergrund
+        border_layer = Image.new('RGBA', (diameter_pixels, diameter_pixels), (255, 255, 255, 0))
         draw_border = ImageDraw.Draw(border_layer)
-        inset = border_pixels // 2
-        draw_border.ellipse(
-            (inset, inset, diameter_pixels - inset, diameter_pixels - inset),
-            outline=(0, 0, 0, 255),
-            width=border_pixels
-        )
-        circular_image = Image.alpha_composite(circular_image, border_layer)
+        # Damit der Rahmen nicht über den Rand hinausragt, wird er innerhalb der kreisförmigen Fläche gezeichnet.
+        # Der "inset" entspricht der halben Randstärke.
+        inset = border_pixels / 2.0
+        left = inset
+        top = inset
+        right = diameter_pixels - inset
+        bottom = diameter_pixels - inset
+        # Zeichne die Ellipse als Rahmen – nur die Kontur, ohne Füllung
+        draw_border.ellipse([left, top, right, bottom], outline=(0, 0, 0, 255), width=int(border_pixels))
+        # Kombiniere den Rahmen mit dem kreisförmigen Bild
+        result = Image.alpha_composite(result, border_layer)
     
-    # Führe den abschließenden Composite-Schritt durch, um volle Transparenz zu gewährleisten
-    final_image = Image.alpha_composite(Image.new('RGBA', circular_image.size, (255, 255, 255, 0)), circular_image)
-    return final_image
+    return result
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
