@@ -123,7 +123,7 @@ def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
                 c.showPage()
                 y = page_height - margin_points - diameter_points
 
-        # Save the image to a buffer to preserve transparency
+        # Speichere das Bild in einen Buffer, um die Transparenz zu erhalten
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
@@ -144,23 +144,31 @@ def resize_image(image, diameter_mm):
 
 def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
+    
+    # Erstelle die kreisförmige Maske
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
-    result.paste(image, (0, 0), mask=mask)
-
+    draw_mask = ImageDraw.Draw(mask)
+    draw_mask.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+    
+    # Erstelle das kreisförmige Bild mit transparentem Hintergrund
+    circular_image = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
+    circular_image.paste(image, (0, 0), mask=mask)
+    
     if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm, 300)
-        draw = ImageDraw.Draw(result)
-        draw.ellipse(
-            (0, 0, diameter_pixels, diameter_pixels),
-            outline=(0, 0, 0, 255),  # Schwarzer Rand
+        # Erstelle einen Layer für den Rahmen
+        border_layer = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
+        draw_border = ImageDraw.Draw(border_layer)
+        inset = border_pixels // 2
+        draw_border.ellipse(
+            (inset, inset, diameter_pixels - inset, diameter_pixels - inset),
+            outline=(0, 0, 0, 255),
             width=border_pixels
         )
-
-    return result
-
+        # Kombiniere den Rahmen mit dem kreisförmigen Bild
+        circular_image = Image.alpha_composite(circular_image, border_layer)
+    
+    return circular_image
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
