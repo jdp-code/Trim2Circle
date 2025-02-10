@@ -142,35 +142,26 @@ def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
+def crop_to_circle(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
-    
-    # Erstelle die kreisförmige Maske
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-    
-    # Erstelle das kreisförmige Bild mit transparentem Hintergrund
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (255, 255, 255, 0))
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
     result.paste(image, (0, 0), mask=mask)
-    # Sicherstellen, dass der Hintergrund transparent ist
+    # Ensure the background is transparent
     result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
     
     if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm, 300)
-        # Erstelle einen Layer für den Rahmen mit transparentem Hintergrund
         border_layer = Image.new('RGBA', (diameter_pixels, diameter_pixels), (255, 255, 255, 0))
         draw_border = ImageDraw.Draw(border_layer)
-        # Damit der Rahmen nicht über den Rand hinausragt, wird er innerhalb der kreisförmigen Fläche gezeichnet.
-        # Der "inset" entspricht der halben Randstärke.
         inset = border_pixels / 2.0
         left = inset
         top = inset
         right = diameter_pixels - inset
         bottom = diameter_pixels - inset
-        # Zeichne die Ellipse als Rahmen – nur die Kontur, ohne Füllung
         draw_border.ellipse([left, top, right, bottom], outline=(0, 0, 0, 255), width=int(border_pixels))
-        # Kombiniere den Rahmen mit dem kreisförmigen Bild
         result = Image.alpha_composite(result, border_layer)
     
     return result
