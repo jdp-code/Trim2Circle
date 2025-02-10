@@ -31,31 +31,31 @@ def mm_to_pixels(mm, dpi=300):
 def mm_to_points(mm):
     return mm * 2.83465
 
-def draw_curved_text(draw, text, diameter, font_size=20, bold_words=[], y_offset=0):
+def draw_curved_text(draw, text, diameter, font_path="arial.ttf", font_size=20, bold_words=[], y_offset=0):
     try:
-        font = ImageFont.truetype("arial.ttf", font_size)
+        font = ImageFont.truetype(font_path, font_size)
         bold_font = ImageFont.truetype("arialbd.ttf", font_size)  # Fettdruck
-    except:
+    except Exception as e:
+        print(f"Fehler beim Laden der Schriftart: {e}")
         font = ImageFont.load_default()
-        bold_font = ImageFont.load_default()
 
+    # Berechnungen für den Text entlang des oberen Kreises
     radius = diameter / 2
-    angle_step = 360 / len(text)
-    current_angle = 270  # Beginne oben
+    text_width = sum(font.getsize(c)[0] for c in text)  # Breite des gesamten Textes
+    start_angle = (360 - (text_width / (2 * math.pi * radius)) * 360) / 2  # Text zentrieren
+    angle_step = (text_width / (2 * math.pi * radius)) * 360 / len(text)  # Abstand pro Buchstabe
+    
+    for i, char in enumerate(text):
+        char_angle = start_angle + i * angle_step
+        radians = math.radians(char_angle)
+        x = radius + (radius - 20) * math.cos(radians)
+        y = radius + (radius - 20) * math.sin(radians) + y_offset
 
-    for char in text:
-        radians = math.radians(current_angle)
-        x = radius + (radius - 10) * math.cos(radians)
-        y = radius + (radius - 10) * math.sin(radians) + y_offset
-
-        # Prüfe ob das Zeichen fett sein soll
+        # Prüfe, ob das aktuelle Wort fett sein soll
         use_bold = char in bold_words
-        draw.text((x, y), char, 
-                 font=bold_font if use_bold else font,
-                 fill=(0, 0, 0),
-                 anchor="mm")
+        draw.text((x, y), char, font=bold_font if use_bold else font, fill=(0, 0, 0), anchor="mm")
 
-        current_angle -= angle_step
+
 
 @app.route('/')
 def index():
@@ -123,30 +123,33 @@ def process_images():
 
 def crop_to_circle(image, params, title):
     diameter = image.width
-    draw = ImageDraw.Draw(image)
-
-    # Kreis zeichnen
+    result = Image.new('RGBA', (diameter, diameter), (255, 255, 255, 0))
     mask = Image.new('L', (diameter, diameter), 0)
     ImageDraw.Draw(mask).ellipse((0, 0, diameter, diameter), fill=255)
-    result = Image.new('RGBA', (diameter, diameter), (0, 0, 0, 0))
     result.paste(image, (0, 0), mask=mask)
+    
+    # Kreis zeichnen, falls aktiviert
+    if params.get('add_border'):
+        border_width = mm_to_pixels(params['border_width'])
+        draw = ImageDraw.Draw(result)
+        draw.ellipse(
+            (border_width // 2, border_width // 2, diameter - border_width // 2, diameter - border_width // 2),
+            outline="black",
+            width=border_width
+        )
 
-    # Text hinzufügen
+    # Überschrift entlang des Kreises hinzufügen
     if title:
-        draw_curved_text(ImageDraw.Draw(result), 
-                        title,
-                        diameter,
-                        params['font_size'],
-                        params['bold_words'],
-                        y_offset=-20)
-
-    # Rand hinzufügen
-    if params['add_border']:
-        border = mm_to_pixels(params['border_width'])
-        ImageDraw.Draw(result).ellipse((0, 0, diameter, diameter), 
-                                      outline=(0, 0, 0), 
-                                      width=border)
+        draw_curved_text(
+            draw=ImageDraw.Draw(result),
+            text=title,
+            diameter=diameter,
+            font_size=params['font_size'],
+            bold_words=params['bold_words'],
+            y_offset=-10  # Position leicht verschoben
+        )
     return result
+
 
 def generate_preview(image):
     buffer = io.BytesIO()
