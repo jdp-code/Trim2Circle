@@ -57,6 +57,14 @@
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             padding-top: 10px;
         }
+        #preview-container {
+            margin-top: 20px;
+            border: 2px dashed #fff;
+            padding: 10px;
+        }
+        #preview {
+            max-width: 100%;
+        }
     </style>
     <script>
         function toggleFields() {
@@ -68,6 +76,22 @@
             });
         }
         document.addEventListener('DOMContentLoaded', toggleFields);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('input_files').addEventListener('change', function(e) {
+                const titlesDiv = document.getElementById('titles');
+                titlesDiv.innerHTML = '';  // Alte Titel löschen
+                
+                Array.from(e.target.files).forEach((file, index) => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label for="title_${index}">Titel für ${file.name}:</label>
+                        <input type="text" id="title_${index}" name="titles[]">
+                    `;
+                    titlesDiv.appendChild(div);
+                });
+            });
+        });
     </script>
 </head>
 <body>
@@ -115,8 +139,16 @@
             </div>
             <label for="input_files">Upload Images:</label>
             <input type="file" id="input_files" name="input_files" multiple accept=".png,.jpg,.jpeg">
+            <div id="titles"></div> <!-- Hier werden die Titel-Eingaben dynamisch erstellt -->
             <button type="submit">Process Images</button>
         </form>
+
+        {% if preview %}
+        <div class="container" id="preview-container">
+            <h3>PDF-Vorschau (erste Seite):</h3>
+            <img id="preview" src="data:image/png;base64,{{ preview }}" alt="PDF-Vorschau">
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>
