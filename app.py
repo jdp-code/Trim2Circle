@@ -144,7 +144,7 @@ def resize_image(image, diameter_mm):
 
 def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
-        mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
+    mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
     result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
