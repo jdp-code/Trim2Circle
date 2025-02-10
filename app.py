@@ -142,16 +142,17 @@ def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm):
+def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
+    
+    # Erstelle die kreisförmige Maske
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
-    result.paste(image, (0, 0), mask=mask)
-    # Ensure the background is transparent
-    result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
-  
+    draw_mask = ImageDraw.Draw(mask)
+    draw_mask.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+    
+    # Erstelle das kreisförmige Bild mit transparentem Hintergrund
+    circular_image = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
+    circular_image.paste(image, (0, 0), mask=mask)
     
     if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm, 300)
@@ -161,13 +162,14 @@ def crop_to_circle(image, diameter_mm):
         inset = border_pixels // 2
         draw_border.ellipse(
             (inset, inset, diameter_pixels - inset, diameter_pixels - inset),
-            outline=(0, 0, 0, 255),    return result
+            outline=(0, 0, 0, 255),
             width=border_pixels
         )
-        # Kombiniere den Rahmen mit dem kreisförmigen Bild
         circular_image = Image.alpha_composite(circular_image, border_layer)
     
-    return circular_image
+    # Führe den abschließenden Composite-Schritt durch, um volle Transparenz zu gewährleisten
+    final_image = Image.alpha_composite(Image.new('RGBA', circular_image.size, (255, 255, 255, 0)), circular_image)
+    return final_image
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
