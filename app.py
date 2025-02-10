@@ -33,12 +33,16 @@ def mm_to_points(mm):
 
 def draw_curved_text(draw, text, diameter, font_size=20, y_offset=0):
     font = ImageFont.truetype("arial.ttf", font_size)  # Arial-Schriftart erforderlich
-    radius = diameter / 2
-    char_angles = [(char, i * (360 / len(text))) for i, char in enumerate(text)]
+    text_width, text_height = draw.textsize(text, font=font)
     
+    # Text an den Kreis anpassen
+    radius = diameter / 2
+    char_angles = [ (char, i * (360 / len(text))) for i, char in enumerate(text) ]
+    
+    # Jeden Buchstaben entlang des Kreises platzieren
     for char, angle in char_angles:
-        radians = math.radians(angle + 90)  # Adjust angle for bottom curve
-        x = radius + radius * math.cos(radians)
+        radians = math.radians(angle + 90)  + 0.2  # Unterer Kreisbogen (Offset für Position)
+        x = radius + radius * math.cos(radians) - 5
         y = radius + radius * math.sin(radians) + y_offset
         draw.text((x, y), char, font=font, fill=(0, 0, 0), anchor="mm")
 
@@ -48,7 +52,6 @@ def index():
 
 @app.route('/process', methods=['POST'])
 def process_images():
-    # Form-Daten auslesen
     diameter_mm = int(request.form['diameter']) if 'diameter' in request.form else None
     margin_mm = int(request.form['margin']) if 'margin' in request.form else 10
     spacing_mm = int(request.form['spacing']) if 'spacing' in request.form else 5
@@ -56,31 +59,35 @@ def process_images():
     paper_size = request.form['paper_size']
     add_border = 'add_border' in request.form
     border_width_mm = float(request.form.get('border_width', 0)) if add_border else 0.0
-    titles = request.form.getlist('titles[]')  # Titel aus dem Formular
     input_files = request.files.getlist('input_files')
+    titles = request.form.getlist('titles[]')  # Titel-Liste aus Formular
 
     images = []
     for i, file in enumerate(input_files):
         if file.filename.endswith(('.png', '.jpg', '.jpeg')):
             try:
                 image = Image.open(file.stream).convert("RGBA")
-                title = titles[i] if i < len(titles) else ""
+                title = titles[i] if i < len(titles) else ""  # Titel für das Bild
+                
                 if diameter_mm:
                     image = resize_image(image, diameter_mm)
                     output_image = crop_to_circle(image, diameter_mm, title, add_border, border_width_mm)
                 else:
                     output_image = image
+                
                 images.append(output_image)
             except Exception as e:
                 logging.error(f"Error processing image {file.filename}: {e}")
                 return f"Error processing image {file.filename}", 500
 
-    # Vorschau generieren (nur für PDF)
+    # PDF-Vorschau generieren
     preview_base64 = None
-    if output_format == 'pdf' and images:
+    if images:
         pdf_buffer = io.BytesIO()
-        create_pdf(images[:1], diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)  # Erste Seite
+        create_pdf(images[:1], diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)  # Nur erste Seite
         pdf_buffer.seek(0)
+        
+        # PDF in PNG konvertieren
         preview_image = convert_from_bytes(pdf_buffer.read(), fmt='png', single_file=True)[0]
         preview_buffer = io.BytesIO()
         preview_image.save(preview_buffer, format='PNG')
@@ -115,7 +122,19 @@ def process_images():
     else:
         return "Invalid output format", 400
 
-    return render_template('index.html', preview=preview_base64)
+def get_paper_size(size_name):
+    sizes = {
+        'A3': A3,
+        'A4': A4,
+        'A5': A5,
+        'LETTER': LETTER,
+        'LEGAL': LEGAL,
+        'B4': B4,
+        'B5': B5,
+        'TABLOID': TABLOID,
+        'CANON_SELPHY': (10*cm, 14.8*cm)
+    }
+    return sizes.get(size_name, A4)
 
 def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
     page_size = get_paper_size(paper_size)
@@ -150,41 +169,32 @@ def resize_image(image, diameter_mm):
 
 def crop_to_circle(image, diameter_mm, title="", add_border=False, border_width_mm=0):
     diameter_pixels = mm_to_pixels(diameter_mm)
+    
+    # Kreis-Maske erstellen
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-
+    
+    # Bild zuschneiden
     result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
     result.paste(image, (0, 0), mask=mask)
 
+    # Titel hinzufügen
     if title:
         draw = ImageDraw.Draw(result)
-        draw_curved_text(draw, title, diameter_pixels, y_offset=20)
-
+        draw_curved_text(draw, title, diameter_pixels, y_offset=20)  # 20 Pixel unterhalb des Kreises
+        
+    # Schwarzen Rand hinzufügen (falls aktiviert)
     if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm)
         draw = ImageDraw.Draw(result)
         draw.ellipse(
-            (border_pixels, border_pixels, diameter_pixels - border_pixels, diameter_pixels - border_pixels),
-            outline=(0, 0, 0, 255),
+            (0, 0, diameter_pixels, diameter_pixels),
+            outline=(0, 0, 0, 255),  # Schwarzer Rand
             width=border_pixels
         )
 
     return result
-
-def get_paper_size(size_name):
-    sizes = {
-        'A3': A3,
-        'A4': A4,
-        'A5': A5,
-        'LETTER': LETTER,
-        'LEGAL': LEGAL,
-        'B4': B4,
-        'B5': B5,
-        'TABLOID': TABLOID,
-        'CANON_SELPHY': (10 * cm, 14.8 * cm)
-    }
-    return sizes.get(size_name, A4)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
