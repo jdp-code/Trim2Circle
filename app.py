@@ -32,16 +32,15 @@ def process_images():
     output_format = request.form['output_format'].lower()
     paper_size = request.form['paper_size']
     input_files = request.files.getlist('input_files')
-    add_border = 'add_border' in request.form
-    border_width_mm = float(request.form.get('border_width', 0))  # Randstärke in mm
 
     images = []
-    for file in input_files:
+    total_files = len(input_files)
+    for i, file in enumerate(input_files):
         if file.filename.endswith(('.png', '.jpg', '.jpeg')):
             image = Image.open(file.stream).convert("RGBA")
             if diameter_mm:
                 image = resize_image(image, diameter_mm)
-                output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
+                output_image = crop_to_circle(image, diameter_mm)
             else:
                 output_image = image
             images.append(output_image)
@@ -123,7 +122,7 @@ def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
                 c.showPage()
                 y = page_height - margin_points - diameter_points
 
-        # Speichere das Bild in einen Buffer, um die Transparenz zu erhalten
+        # Save the image to a buffer to preserve transparency
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
@@ -143,29 +142,16 @@ def resize_image(image, diameter_mm):
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
 def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
-    # Berechne die Zielgröße
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
-    
-    # Verwende einen Skalierungsfaktor für bessere Kantenglättung
-    scale = 4
-    hr_size = diameter_pixels * scale
-
-    # Erstelle eine hochauflösende kreisförmige Maske
-    hr_mask = Image.new('L', (hr_size, hr_size), 0)
-    hr_draw = ImageDraw.Draw(hr_mask)
-    hr_draw.ellipse((0, 0, hr_size, hr_size), fill=255)
-    # Herunterskalieren auf die Zielgröße
-    mask = hr_mask.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
-
-    # Passe das Bild auf die Zielgröße an
-    image_resized = image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
-
-    # Erstelle das Grundbild mit transparentem Hintergrund
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (255, 255, 255, 0))
-    result.paste(image_resized, (0, 0), mask=mask)
-    # Führe einen finalen Alpha-Compositing-Schritt durch – einmalig!
+    mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
+    result.paste(image, (0, 0), mask=mask)
+    # Ensure the background is transparent
     result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
-    
+
+
     if add_border and border_width_mm > 0:
         # Erstelle den Rahmen ebenfalls in hoher Auflösung
         border_pixels = mm_to_pixels(border_width_mm, 300)
@@ -183,6 +169,7 @@ def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
         result = Image.alpha_composite(result, border_image)
     
     return result
+
 
 
 
