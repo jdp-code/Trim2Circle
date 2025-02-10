@@ -37,12 +37,12 @@
             margin: 10px 0 5px;
         }
         input, select, button {
-            width: calc(100% - 20px); /* Adjust width to account for padding */
+            width: calc(100% - 20px);
             padding: 10px;
             margin-bottom: 10px;
             border: none;
             border-radius: 5px;
-            box-sizing: border-box; /* Ensure padding is included in width */
+            box-sizing: border-box;
         }
         button {
             background-color: #2575fc;
@@ -52,32 +52,23 @@
         button:hover {
             background-color: #1a5bb8;
         }
+        #border_field {
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 10px;
+        }
     </style>
-        <script>
-            function toggleFields() {
-                var outputFormat = document.getElementById('output_format').value;
-                var diameterField = document.getElementById('diameter_field');
-                var paperSizeField = document.getElementById('paper_size_field');
-                var marginField = document.getElementById('margin_field');
-                var spacingField = document.getElementById('spacing_field');
-    
-                if (outputFormat === 'pdf' || outputFormat === 'png' || outputFormat === 'zip') {
-                    diameterField.style.display = 'block';
-                    paperSizeField.style.display = 'block';
-                    marginField.style.display = 'block';
-                    spacingField.style.display = 'block';
-                } else {
-                    diameterField.style.display = 'none';
-                    paperSizeField.style.display = 'none';
-                    marginField.style.display = 'none';
-                    spacingField.style.display = 'none';
-                }
-            }
-    
-            document.addEventListener('DOMContentLoaded', function() {
-                toggleFields(); // Ensure fields are correctly displayed on load
+    <script>
+        function toggleFields() {
+            const outputFormat = document.getElementById('output_format').value;
+            const fields = ['diameter_field', 'paper_size_field', 'margin_field', 'spacing_field'];
+            fields.forEach(field => {
+                document.getElementById(field).style.display = 
+                    (outputFormat === 'pdf' || outputFormat === 'png') ? 'block' : 'none';
             });
-        </script>
+        }
+        document.addEventListener('DOMContentLoaded', toggleFields);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -92,7 +83,7 @@
             </select>
             <div id="diameter_field">
                 <label for="diameter">Diameter (mm):</label>
-                <input type="number" id="diameter" name="diameter">
+                <input type="number" id="diameter" name="diameter" required>
             </div>
             <div id="paper_size_field">
                 <label for="paper_size">Paper Size:</label>
@@ -110,11 +101,11 @@
             </div>
             <div id="margin_field">
                 <label for="margin">Margin (mm):</label>
-                <input type="number" id="margin" name="margin" value="10">
+                <input type="number" id="margin" name="margin" value="10" min="0">
             </div>
             <div id="spacing_field">
                 <label for="spacing">Spacing (mm):</label>
-                <input type="number" id="spacing" name="spacing" value="5">
+                <input type="number" id="spacing" name="spacing" value="5" min="0">
             </div>
             <div id="border_field">
                 <label for="add_border">Schwarzer Rand:</label>
@@ -123,7 +114,7 @@
                 <input type="number" id="border_width" name="border_width" value="0.5" min="0" step="0.1">
             </div>
             <label for="input_files">Upload Images:</label>
-            <input type="file" id="input_files" name="input_files" multiple>
+            <input type="file" id="input_files" name="input_files" multiple accept=".png,.jpg,.jpeg">
             <button type="submit">Process Images</button>
         </form>
     </div>
