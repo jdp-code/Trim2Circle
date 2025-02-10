@@ -11,8 +11,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import cm
 import logging
 from textwrap import wrap
+from html.parser import HTMLParser
 
-# Ensure pdf2image is installed
 try:
     from pdf2image import convert_from_bytes
 except ImportError:
@@ -31,20 +31,45 @@ def mm_to_pixels(mm, dpi=300):
 def mm_to_points(mm):
     return mm * 2.83465
 
+class HTMLTextParser(HTMLParser):
+    """Parser für HTML-Tags, um fettgedruckte Texte zu unterstützen."""
+    def __init__(self):
+        super().__init__()
+        self.text_parts = []
+        self.bold = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'b':
+            self.bold = True
+
+    def handle_endtag(self, tag):
+        if tag == 'b':
+            self.bold = False
+
+    def handle_data(self, data):
+        self.text_parts.append((data, self.bold))
+
+def parse_html_text(html_text):
+    parser = HTMLTextParser()
+    parser.feed(html_text)
+    return parser.text_parts
+
 def draw_curved_text(draw, text, diameter, font_size=20, y_offset=0):
-    font = ImageFont.truetype("arial.ttf", font_size)  # Arial-Schriftart erforderlich
-    text_width, text_height = draw.textsize(text, font=font)
-    
-    # Text an den Kreis anpassen
+    """Zeichnet geschwungenen Text entlang eines Kreises."""
     radius = diameter / 2
-    char_angles = [ (char, i * (360 / len(text))) for i, char in enumerate(text) ]
-    
-    # Jeden Buchstaben entlang des Kreises platzieren
-    for char, angle in char_angles:
-        radians = math.radians(angle + 90)  + 0.2  # Unterer Kreisbogen (Offset für Position)
-        x = radius + radius * math.cos(radians) - 5
-        y = radius + radius * math.sin(radians) + y_offset
-        draw.text((x, y), char, font=font, fill=(0, 0, 0), anchor="mm")
+    text_parts = parse_html_text(text)
+
+    angle_per_char = 360 / sum(len(part[0]) for part in text_parts)
+    current_angle = -len(text) * angle_per_char / 2  # Zentriere den Text
+
+    for part, is_bold in text_parts:
+        font = ImageFont.truetype("arialbd.ttf" if is_bold else "arial.ttf", font_size)
+        for char in part:
+            radians = math.radians(current_angle)
+            x = radius + radius * math.cos(radians) - font_size / 2
+            y = radius + radius * math.sin(radians) + y_offset
+            draw.text((x, y), char, font=font, fill=(0, 0, 0), anchor="mm")
+            current_angle += angle_per_char
 
 @app.route('/')
 def index():
@@ -122,47 +147,6 @@ def process_images():
     else:
         return "Invalid output format", 400
 
-def get_paper_size(size_name):
-    sizes = {
-        'A3': A3,
-        'A4': A4,
-        'A5': A5,
-        'LETTER': LETTER,
-        'LEGAL': LEGAL,
-        'B4': B4,
-        'B5': B5,
-        'TABLOID': TABLOID,
-        'CANON_SELPHY': (10*cm, 14.8*cm)
-    }
-    return sizes.get(size_name, A4)
-
-def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
-    page_size = get_paper_size(paper_size)
-    c = canvas.Canvas(buffer, pagesize=page_size)
-    diameter_points = mm_to_points(diameter_mm) if diameter_mm else None
-    margin_points = mm_to_points(margin_mm)
-    spacing_points = mm_to_points(spacing_mm)
-    page_width, page_height = page_size
-
-    x = margin_points
-    y = page_height - margin_points - (diameter_points if diameter_points else 0)
-
-    for image in images:
-        if diameter_points and x + diameter_points > page_width - margin_points:
-            x = margin_points
-            y -= diameter_points + spacing_points
-            if y < margin_points:
-                c.showPage()
-                y = page_height - margin_points - diameter_points
-
-        img_buffer = io.BytesIO()
-        image.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
-        c.drawImage(ImageReader(img_buffer), x, y, width=diameter_points, height=diameter_points, mask='auto')
-        x += diameter_points + spacing_points
-
-    c.save()
-
 def resize_image(image, diameter_mm):
     diameter_pixels = mm_to_pixels(diameter_mm)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
@@ -182,7 +166,7 @@ def crop_to_circle(image, diameter_mm, title="", add_border=False, border_width_
     # Titel hinzufügen
     if title:
         draw = ImageDraw.Draw(result)
-        draw_curved_text(draw, title, diameter_pixels, y_offset=20)  # 20 Pixel unterhalb des Kreises
+        draw_curved_text(draw, title, diameter_pixels, y_offset=-20)  # Oberhalb des Kreises
         
     # Schwarzen Rand hinzufügen (falls aktiviert)
     if add_border and border_width_mm > 0:
