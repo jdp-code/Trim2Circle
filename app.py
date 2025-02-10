@@ -26,46 +26,45 @@ def index():
 
 @app.route('/process', methods=['POST'])
 def process_images():
+    # Form-Daten auslesen
     diameter_mm = int(request.form['diameter']) if 'diameter' in request.form else None
     margin_mm = int(request.form['margin']) if 'margin' in request.form else 10
     spacing_mm = int(request.form['spacing']) if 'spacing' in request.form else 5
     output_format = request.form['output_format'].lower()
     paper_size = request.form['paper_size']
+    add_border = 'add_border' in request.form
+    border_width_mm = float(request.form.get('border_width', 0)) if add_border else 0.0
     input_files = request.files.getlist('input_files')
 
     images = []
-    total_files = len(input_files)
-    for i, file in enumerate(input_files):
+    for file in input_files:
         if file.filename.endswith(('.png', '.jpg', '.jpeg')):
-            image = Image.open(file.stream).convert("RGBA")
-            if diameter_mm:
-                image = resize_image(image, diameter_mm)
-                output_image = crop_to_circle(image, diameter_mm)
-            else:
-                output_image = image
-            images.append(output_image)
+            try:
+                image = Image.open(file.stream).convert("RGBA")
+                if diameter_mm:
+                    image = resize_image(image, diameter_mm)
+                    output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
+                else:
+                    output_image = image
+                images.append(output_image)
+            except Exception as e:
+                logging.error(f"Error processing image {file.filename}: {e}")
+                return f"Error processing image {file.filename}", 500
 
+    # Ausgabe generieren
     if output_format == 'pdf':
         pdf_buffer = io.BytesIO()
         create_pdf(images, diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)
         pdf_buffer.seek(0)
         return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=True, download_name='processed_images.pdf')
     elif output_format == 'png':
-        pdf_buffer = io.BytesIO()
-        create_pdf(images, diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)
-        pdf_buffer.seek(0)
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zf:
-            try:
-                pdf_images = convert_pdf_to_images(pdf_buffer, 'png')
-                for i, img in enumerate(pdf_images):
-                    img_buffer = io.BytesIO()
-                    img.save(img_buffer, format='PNG')
-                    img_buffer.seek(0)
-                    zf.writestr(f'page_{i+1}.png', img_buffer.read())
-            except Exception as e:
-                logging.error(f"Error converting PDF to images: {e}")
-                return "Error converting PDF to images", 500
+            for i, image in enumerate(images):
+                img_buffer = io.BytesIO()
+                image.save(img_buffer, format='PNG')
+                img_buffer.seek(0)
+                zf.writestr(f'image_{i+1}.png', img_buffer.read())
         zip_buffer.seek(0)
         return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='processed_images.zip')
     elif output_format == 'zip':
@@ -81,7 +80,7 @@ def process_images():
     else:
         return "Invalid output format", 400
 
-def mm_to_pixels(mm, dpi):
+def mm_to_pixels(mm, dpi=300):
     return int(mm * 0.0393701 * dpi)
 
 def mm_to_points(mm):
@@ -122,34 +121,35 @@ def create_pdf(images, diameter_mm, margin_mm, spacing_mm, buffer, paper_size):
                 c.showPage()
                 y = page_height - margin_points - diameter_points
 
-        # Save the image to a buffer to preserve transparency
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
-        img_reader = ImageReader(img_buffer)
-        c.drawImage(img_reader, x, y, width=diameter_points, height=diameter_points)
+        c.drawImage(ImageReader(img_buffer), x, y, width=diameter_points, height=diameter_points, mask='auto')
         x += diameter_points + spacing_points
 
     c.save()
 
-def convert_pdf_to_images(pdf_buffer, image_format):
-    pdf_buffer.seek(0)
-    images = convert_from_bytes(pdf_buffer.read(), fmt=image_format)
-    return images
-
 def resize_image(image, diameter_mm):
-    diameter_pixels = mm_to_pixels(diameter_mm, 300)
+    diameter_pixels = mm_to_pixels(diameter_mm)
     return image.resize((diameter_pixels, diameter_pixels), Image.LANCZOS)
 
-def crop_to_circle(image, diameter_mm):
-    diameter_pixels = mm_to_pixels(diameter_mm, 300)
+def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0.0):
+    diameter_pixels = mm_to_pixels(diameter_mm)
     mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))
     result.paste(image, (0, 0), mask=mask)
-    # Ensure the background is transparent
-    result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
+
+    if add_border and border_width_mm > 0:
+        border_pixels = mm_to_pixels(border_width_mm)
+        draw = ImageDraw.Draw(result)
+        draw.ellipse(
+            (0, 0, diameter_pixels, diameter_pixels),
+            outline=(0, 0, 0, 255),
+            width=border_pixels
+        )
+
     return result
 
 if __name__ == '__main__':
