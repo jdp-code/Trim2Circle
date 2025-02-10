@@ -24,13 +24,6 @@
             border-radius: 1rem;
         }
         
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-        
         input[type="file"],
         input[type="number"],
         input[type="text"],
@@ -89,6 +82,16 @@
                 </div>
 
                 <div>
+                    <label for="add_border">Kreis hinzufügen:</label>
+                    <input type="checkbox" id="add_border" name="add_border">
+                </div>
+
+                <div>
+                    <label for="border_width">Randbreite (mm):</label>
+                    <input type="number" id="border_width" name="border_width" min="0.1" step="0.1" value="0.5">
+                </div>
+
+                <div>
                     <label for="paper_size">Papierformat:</label>
                     <select id="paper_size" name="paper_size">
                         <option value="A4" selected>A4</option>
@@ -112,7 +115,7 @@
                 </div>
             </div>
 
-            <!-- Dynamische Titel für hochgeladene Bilderrrrr -->
+            <!-- Dynamische Titel für hochgeladene Bilder -->
             <div id="title-inputs"></div>
 
             <button type="submit">Generieren</button>
