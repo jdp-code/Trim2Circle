@@ -34,16 +34,14 @@ def process_images():
     input_files = request.files.getlist('input_files')
     add_border = 'add_border' in request.form
     border_width_mm = float(request.form.get('border_width', 0))  # Randstärke in mm
-    output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
 
     images = []
-    total_files = len(input_files)
-    for i, file in enumerate(input_files):
+    for file in input_files:
         if file.filename.endswith(('.png', '.jpg', '.jpeg')):
             image = Image.open(file.stream).convert("RGBA")
             if diameter_mm:
                 image = resize_image(image, diameter_mm)
-                output_image = crop_to_circle(image, diameter_mm)
+                output_image = crop_to_circle(image, diameter_mm, add_border, border_width_mm)
             else:
                 output_image = image
             images.append(output_image)
@@ -146,12 +144,12 @@ def resize_image(image, diameter_mm):
 
 def crop_to_circle(image, diameter_mm, add_border=False, border_width_mm=0):
     diameter_pixels = mm_to_pixels(diameter_mm, 300)
-    mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
+        mask = Image.new('L', (diameter_pixels, diameter_pixels), 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, diameter_pixels, diameter_pixels), fill=255)
-    result = Image.new('RGBA', (diameter_pixels, diameter_pixels))
+    result = Image.new('RGBA', (diameter_pixels, diameter_pixels), (0, 0, 0, 0))  # Transparenter Hintergrund
     result.paste(image, (0, 0), mask=mask)
-    result = Image.alpha_composite(Image.new('RGBA', result.size, (255, 255, 255, 0)), result)
+
     if add_border and border_width_mm > 0:
         border_pixels = mm_to_pixels(border_width_mm, 300)
         draw = ImageDraw.Draw(result)
