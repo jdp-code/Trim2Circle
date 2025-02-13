@@ -1,6 +1,6 @@
 services:
   web:
-    image: jdpcode/trim2circle
+    image: sorz2122/trim2circle
     #Only needed if building the image yourself
     #build: .
     ports:
@@ -10,3 +10,8 @@ services:
     #- .:/app
     #environment:
     #  FLASK_ENV: production
+    networks:
+      - proxy_net
+networks:
+  proxy_net:
+    external: true
