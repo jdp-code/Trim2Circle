@@ -51,7 +51,6 @@ def process_images():
                 logging.error(f"Error processing image {file.filename}: {e}")
                 return f"Error processing image {file.filename}", 500
 
-    # Ausgabe generieren
     if output_format == 'pdf':
         pdf_buffer = io.BytesIO()
         create_pdf(images, diameter_mm, margin_mm, spacing_mm, pdf_buffer, paper_size)
