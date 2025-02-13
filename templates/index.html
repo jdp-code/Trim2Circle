@@ -1,150 +1,122 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilder-Konfiguration</title>
+    <title>Trim2Circle</title>
     <style>
-        :root {
-            --primary: #2563eb;
-            --background: #1e293b;
-        }
-        
         body {
-            background: var(--background);
-            color: white;
+            margin: 0;
             font-family: Arial, sans-serif;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-        }
-        
-        input[type="file"],
-        input[type="number"],
-        input[type="text"],
-        select,
-        button {
-            width: 100%;
-            padding: 0.5rem;
-            margin: 0.2rem 0;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--primary);
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             color: white;
-            border-radius: 0.5rem;
         }
-        
-        button {
-            cursor: pointer;
-            background: var(--primary);
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 400px;
+        }
+        .logo {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .description {
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, select, button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
             border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
         }
-        
+        button {
+            background-color: #2575fc;
+            color: white;
+            cursor: pointer;
+        }
         button:hover {
-            background: #1d4ed8;
+            background-color: #1a5bb8;
         }
-        
-        .preview-container {
-            margin: 2rem 0;
-        }
-        
-        .preview-image {
-            max-width: 100%;
-            border: 2px dashed var(--primary);
-            border-radius: 1rem;
+        #border_field {
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 10px;
         }
     </style>
+    <script>
+        function toggleFields() {
+            const outputFormat = document.getElementById('output_format').value;
+            const fields = ['diameter_field', 'paper_size_field', 'margin_field', 'spacing_field'];
+            fields.forEach(field => {
+                document.getElementById(field).style.display = 
+                    (outputFormat === 'pdf' || outputFormat === 'png') ? 'block' : 'none';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', toggleFields);
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Bilder-Konfiguration</h1>
-        <form method="post" action="/process" enctype="multipart/form-data">
-            <div class="settings-grid">
-                <!-- Dateiupload -->
-                <div>
-                    <label for="input_files">Bilder auswählen:</label>
-                    <input type="file" id="input_files" name="input_files" multiple accept="image/*" required>
-                </div>
-
-                <!-- Grundeinstellungen -->
-                <div>
-                    <label for="diameter">Durchmesser (mm):</label>
-                    <input type="number" id="diameter" name="diameter" min="10" value="50" required>
-                </div>
-
-                <div>
-                    <label for="font_size">Schriftgröße:</label>
-                    <input type="number" id="font_size" name="font_size" min="8" max="48" value="20">
-                </div>
-
-                <div>
-                    <label for="add_border">Kreis hinzufügen:</label>
-                    <input type="checkbox" id="add_border" name="add_border">
-                </div>
-
-                <div>
-                    <label for="border_width">Randbreite (mm):</label>
-                    <input type="number" id="border_width" name="border_width" min="0.1" step="0.1" value="0.5">
-                </div>
-
-                <div>
-                    <label for="paper_size">Papierformat:</label>
-                    <select id="paper_size" name="paper_size">
-                        <option value="A4" selected>A4</option>
-                        <option value="A3">A3</option>
-                        <option value="A5">A5</option>
-                        <option value="LETTER">Letter</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="bold_words">Fette Wörter (kommagetrennt):</label>
-                    <input type="text" id="bold_words" name="bold_words" placeholder="Beispiel: Hallo,Welt">
-                </div>
-
-                <div>
-                    <label for="output_format">Ausgabeformat:</label>
-                    <select id="output_format" name="output_format">
-                        <option value="pdf" selected>PDF</option>
-                        <option value="png">PNG (ZIP-Datei)</option>
-                    </select>
-                </div>
+        <div class="logo">Trim2Circle</div>
+        <div class="description">Upload your images and choose the desired output format. You can resize and crop images to a circle, and generate a PDF, PNG, or ZIP file.</div>
+        <form action="/process" method="post" enctype="multipart/form-data">
+            <label for="output_format">Output Format:</label>
+            <select id="output_format" name="output_format" onchange="toggleFields()">
+                <option value="pdf" selected>PDF</option>
+                <option value="png">PNG</option>
+                <option value="zip">ZIP</option>
+            </select>
+            <div id="diameter_field">
+                <label for="diameter">Diameter (mm):</label>
+                <input type="number" id="diameter" name="diameter" required>
             </div>
-
-            <!-- Dynamische Titel für hochgeladene Bilder -->
-            <div id="title-inputs"></div>
-
-            <button type="submit">Generieren</button>
+            <div id="paper_size_field">
+                <label for="paper_size">Paper Size:</label>
+                <select id="paper_size" name="paper_size">
+                    <option value="A4">A4</option>
+                    <option value="A3">A3</option>
+                    <option value="A5">A5</option>
+                    <option value="LETTER">Letter</option>
+                    <option value="LEGAL">Legal</option>
+                    <option value="B4">B4</option>
+                    <option value="B5">B5</option>
+                    <option value="TABLOID">Tabloid</option>
+                    <option value="CANON_SELPHY">Canon Selphy (100mm x 148mm)</option>
+                </select>
+            </div>
+            <div id="margin_field">
+                <label for="margin">Margin (mm):</label>
+                <input type="number" id="margin" name="margin" value="10" min="0">
+            </div>
+            <div id="spacing_field">
+                <label for="spacing">Spacing (mm):</label>
+                <input type="number" id="spacing" name="spacing" value="5" min="0">
+            </div>
+            <div id="border_field">
+                <label for="add_border">Schwarzer Rand:</label>
+                <input type="checkbox" id="add_border" name="add_border">
+                <label for="border_width">Randstärke (mm):</label>
+                <input type="number" id="border_width" name="border_width" value="0.5" min="0" step="0.1">
+            </div>
+            <label for="input_files">Upload Images:</label>
+            <input type="file" id="input_files" name="input_files" multiple accept=".png,.jpg,.jpeg">
+            <button type="submit">Process Images</button>
         </form>
-
-        <!-- Vorschau-Bereich -->
-        {% if preview %}
-        <div class="preview-container">
-            <h2>Live-Vorschau</h2>
-            <img class="preview-image" src="data:image/png;base64,{{ preview }}" alt="Vorschau">
-        </div>
-        {% endif %}
     </div>
-
-    <script>
-        // Dynamische Eingabe der Titel basierend auf den hochgeladenen Dateien
-        document.getElementById('input_files').addEventListener('change', function(e) {
-            const titleInputsContainer = document.getElementById('title-inputs');
-            titleInputsContainer.innerHTML = ''; // Alte Eingaben löschen
-            
-            Array.from(e.target.files).forEach((file, index) => {
-                const titleDiv = document.createElement('div');
-                titleDiv.innerHTML = `
-                    <label for="title_${index}">Titel für ${file.name}:</label>
-                    <input type="text" id="title_${index}" name="title_${index}" placeholder="Titel für ${file.name}">
-                `;
-                titleInputsContainer.appendChild(titleDiv);
-            });
-        });
-    </script>
 </body>
 </html>
