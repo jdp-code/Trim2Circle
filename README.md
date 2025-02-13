@@ -60,15 +60,15 @@ https://www.youtube.com/watch?v=JpMRyshgy9o
 
 ## Example Output PDF
 
-###Interface
+### Interface
 
 ![image](https://github.com/user-attachments/assets/ae4f707f-a140-4f37-832e-7c8ba8efcdd2)
 
-###Without Border
+### Without Border
 
 ![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
 
-###With Border
+### With Border
 
 ![image](https://github.com/user-attachments/assets/60ce47ad-349c-4964-92ac-de401500cc20)
 
