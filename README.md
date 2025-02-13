@@ -1,10 +1,10 @@
 # Trim2Circle
 
-Trim2Circle is a web application that allows users to upload images, resize and crop them to a circle, and generate a PDF or ZIP file with the processed images.
+Trim2Circle is a web application that allows users to upload images, resize and crop them to a circle, and generate a PDF, PNG, or ZIP file with the processed images.
 
 ## Usecase
 
-Custome figurines and tags for Teddy Cloud
+Custom figurines and tags for Teddy Cloud
 
 https://github.com/toniebox-reverse-engineering/teddycloud
 
@@ -19,8 +19,11 @@ https://www.youtube.com/watch?v=JpMRyshgy9o
 - Upload multiple images (PNG, JPG, JPEG)
 - Resize images to a specified diameter
 - Crop images to a circle
+- Add a black border with a specified thickness (thanks sorz2122)
 - Generate a PDF with the processed images
+- Generate a PNG with the processed images
 - Generate a ZIP file with the processed images
+- Automatically convert multi-page PDFs to PNGs and package them in a ZIP file if necessary
 
 ## Installation
 
@@ -48,23 +51,54 @@ https://www.youtube.com/watch?v=JpMRyshgy9o
 
 ## Usage
 
-1. Select the output format (PDF or ZIP).
-2. If PDF is selected, specify the diameter (in mm) and the paper size.
-3. Upload the images you want to process.
-4. Click the "Process" button to generate the output file.
+1. Select the output format (PDF, PNG, or ZIP).
+2. If PDF or PNG is selected, specify the diameter (in mm) and the paper size.
+3. Optionally, specify the margin and spacing (in mm).
+4. Optionally, add a black border and specify the border thickness (in mm).
+5. Upload the images you want to process.
+6. Click the "Process" button to generate the output file.
 
 ## Example Output PDF
 ![image](https://github.com/user-attachments/assets/76447906-c8c0-443b-a392-6238ead95970)
 
 ![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
 
+## Deploy with Portainer
+
+To deploy Trim2Circle as a stack using Portainer, follow these steps:
+
+1. Open Portainer and navigate to the "Stacks" section.
+2. Click on "Add stack".
+3. Name your stack (e.g., `Trim2Circle`).
+4. In the "Web editor" section, paste the following content:
+
+    ```yaml
+    services:
+  web:
+    image: jdpcode/trim2circle
+    #Only needed if building the image yourself
+    #build: .
+    ports:
+      - "5000:5000"
+    #Only needed if building the image yourself
+    #volumes:
+    #- .:/app
+    #environment:
+    #  FLASK_ENV: production
+    ```
+
+5. Replace `/path/to/local/data` with the path to the directory on your host where you want to store the application data.
+6. Click "Deploy the stack".
+
+7. Open your web browser and go to `http://<your-portainer-host>:5000`.
 
 ## Dependencies
 
 - Flask
 - Pillow
 - reportlab
+- pdf2image
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.
