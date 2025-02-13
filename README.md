@@ -59,9 +59,15 @@ https://www.youtube.com/watch?v=JpMRyshgy9o
 6. Click the "Process" button to generate the output file.
 
 ## Example Output PDF
-![image](https://github.com/user-attachments/assets/76447906-c8c0-443b-a392-6238ead95970)
+Interface
+![image](https://github.com/user-attachments/assets/ae4f707f-a140-4f37-832e-7c8ba8efcdd2)
 
+Without Border
 ![image](https://github.com/user-attachments/assets/2f7c7840-0b33-4b70-bdcd-8fbce054c381)
+
+With Border
+![image](https://github.com/user-attachments/assets/60ce47ad-349c-4964-92ac-de401500cc20)
+
 
 ## Deploy with Portainer
 
