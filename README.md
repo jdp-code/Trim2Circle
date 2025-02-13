@@ -74,17 +74,17 @@ To deploy Trim2Circle as a stack using Portainer, follow these steps:
 
     ```yaml
     services:
-  web:
-    image: jdpcode/trim2circle
-    #Only needed if building the image yourself
-    #build: .
-    ports:
-      - "5000:5000"
-    #Only needed if building the image yourself
-    #volumes:
-    #- .:/app
-    #environment:
-    #  FLASK_ENV: production
+        web:
+            image: jdpcode/trim2circle
+            #Only needed if building the image yourself
+            #build: .
+            ports:
+            - "5000:5000"
+            #Only needed if building the image yourself
+            #volumes:
+            #- .:/app
+            #environment:
+            #  FLASK_ENV: production
     ```
 
 5. Replace `/path/to/local/data` with the path to the directory on your host where you want to store the application data.
